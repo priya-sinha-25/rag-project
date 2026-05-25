@@ -1,0 +1,28 @@
+refusal_intents:
+  - intent: advisory
+    description: "Queries asking for investment advice or recommendations."
+    patterns:
+      - "should i invest"
+      - "is it a good time"
+      - "recommend"
+      - "give me advice"
+      - "is this fund good"
+    canned_copy: "I can only provide factual information about mutual fund schemes and cannot offer investment advice or recommendations. Please refer to the official scheme page for more details: {educational_link}"
+    
+  - intent: comparison
+    description: "Queries asking to compare funds to declare a winner."
+    patterns:
+      - "which is better"
+      - "vs"
+      - "compare"
+      - "which one should i choose"
+    canned_copy: "I do not compare mutual fund schemes or suggest which one is better. You can find detailed factual information about the specific scheme here: {educational_link}"
+    
+  - intent: prediction
+    description: "Queries asking for future returns or performance predictions."
+    patterns:
+      - "will it go up"
+      - "future return"
+      - "predict"
+      - "expected return"
+    canned_copy: "I cannot predict future returns or market performance. For historical data and facts, please see the official scheme page: {educational_link}"
