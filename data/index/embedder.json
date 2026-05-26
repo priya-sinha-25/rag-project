@@ -1,0 +1,13 @@
+{
+  "model": "BAAI/bge-small-en-v1.5",
+  "dim": 384,
+  "n_chunks": 59,
+  "built_at": "2026-05-24T09:05:09.959420+00:00",
+  "per_scheme_counts": {
+    "hdfc_elss": 11,
+    "hdfc_equity": 13,
+    "hdfc_focused": 11,
+    "hdfc_large_cap": 11,
+    "hdfc_mid_cap": 13
+  }
+}

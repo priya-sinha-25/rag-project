@@ -1,6 +1,7 @@
 venv/
 .env
-data/
+data/*
+!data/index/
 __pycache__/
 *.pyc
 *.log
