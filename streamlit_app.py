@@ -6,6 +6,19 @@ import streamlit as st
 # Add src to PYTHONPATH so we can import mf_faq
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
+# Load Streamlit Secrets if available
+if hasattr(st, "secrets") and "GROQ_API_KEY" in st.secrets:
+    os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
+
+# Auto-build the knowledge base if the index doesn't exist (e.g. on first deploy to Streamlit Cloud)
+index_path = Path("data/index/vector.faiss")
+if not index_path.exists():
+    # We use a placeholder here because st.spinner can only be used inside the main app context
+    st.info("First-time setup: Initializing Knowledge Base and downloading embeddings... This may take a minute.")
+    from mf_faq.ingestion.pipeline.service import Pipeline
+    Pipeline().refresh()
+    st.success("Knowledge Base initialized! Ready to chat.")
+
 from mf_faq.orchestrator.service import Orchestrator
 
 # Initialize Page
