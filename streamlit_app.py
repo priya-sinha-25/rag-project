@@ -3,6 +3,13 @@ import os
 from pathlib import Path
 import streamlit as st
 
+# Initialize Page must be the FIRST streamlit command
+st.set_page_config(
+    page_title="Grow RAG | Facts-Only Assistant",
+    page_icon="📈",
+    layout="wide"
+)
+
 # Add src to PYTHONPATH so we can import mf_faq
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
@@ -10,23 +17,15 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 if hasattr(st, "secrets") and "GROQ_API_KEY" in st.secrets:
     os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
 
-# Auto-build the knowledge base if the index doesn't exist (e.g. on first deploy to Streamlit Cloud)
+# Auto-build the knowledge base if the index doesn't exist
 index_path = Path("data/index/vector.faiss")
 if not index_path.exists():
-    # We use a placeholder here because st.spinner can only be used inside the main app context
     st.info("First-time setup: Initializing Knowledge Base and downloading embeddings... This may take a minute.")
     from mf_faq.ingestion.pipeline.service import Pipeline
     Pipeline().refresh()
     st.success("Knowledge Base initialized! Ready to chat.")
 
 from mf_faq.orchestrator.service import Orchestrator
-
-# Initialize Page
-st.set_page_config(
-    page_title="Grow RAG | Facts-Only Assistant",
-    page_icon="📈",
-    layout="wide"
-)
 
 # Initialize Orchestrator once
 @st.cache_resource
