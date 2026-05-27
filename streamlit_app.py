@@ -1,6 +1,7 @@
 import sys
 import os
 from pathlib import Path
+import traceback
 import streamlit as st
 
 # Initialize Page must be the FIRST streamlit command
@@ -10,29 +11,36 @@ st.set_page_config(
     layout="wide"
 )
 
-# Add src to PYTHONPATH so we can import mf_faq
-sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
+# Global error catcher for initialization
+try:
+    # Add src to PYTHONPATH so we can import mf_faq
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
 
-# Load Streamlit Secrets if available
-if hasattr(st, "secrets") and "GROQ_API_KEY" in st.secrets:
-    os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
+    # Load Streamlit Secrets if available
+    if hasattr(st, "secrets") and "GROQ_API_KEY" in st.secrets:
+        os.environ["GROQ_API_KEY"] = st.secrets["GROQ_API_KEY"]
 
-# Auto-build the knowledge base if the index doesn't exist
-index_path = Path("data/index/vector.faiss")
-if not index_path.exists():
-    st.info("First-time setup: Initializing Knowledge Base and downloading embeddings... This may take a minute.")
-    from mf_faq.ingestion.pipeline.service import Pipeline
-    Pipeline().refresh()
-    st.success("Knowledge Base initialized! Ready to chat.")
+    # Auto-build the knowledge base if the index doesn't exist
+    index_path = Path("data/index/vector.faiss")
+    if not index_path.exists():
+        st.info("First-time setup: Initializing Knowledge Base and downloading embeddings... This may take a minute.")
+        from mf_faq.ingestion.pipeline.service import Pipeline
+        Pipeline().refresh()
+        st.success("Knowledge Base initialized! Ready to chat.")
 
-from mf_faq.orchestrator.service import Orchestrator
+    from mf_faq.orchestrator.service import OrchestratorService
 
-# Initialize Orchestrator once
-@st.cache_resource
-def get_orchestrator():
-    return Orchestrator()
+    # Initialize Orchestrator once
+    @st.cache_resource
+    def get_orchestrator():
+        return OrchestratorService()
 
-orchestrator = get_orchestrator()
+    orchestrator = get_orchestrator()
+
+except Exception as e:
+    st.error("Application Failed to Initialize. Please check the logs or screenshot this error:")
+    st.code(traceback.format_exc())
+    st.stop()
 
 # Initialize Chat History
 if "messages" not in st.session_state:
@@ -57,8 +65,6 @@ with st.sidebar:
     
     for ex in examples:
         if st.button(ex, help="Click to ask"):
-            # Streamlit doesn't have a built-in way to populate chat_input from a button click without experimental reruns.
-            # We will just append the message directly and rerun.
             st.session_state.messages.append({"role": "user", "content": ex})
             st.rerun()
 
@@ -83,8 +89,8 @@ if prompt := st.chat_input("Ask a factual question about listed HDFC schemes..."
     with st.chat_message("assistant"):
         with st.spinner("Searching verified sources..."):
             try:
-                # Call orchestrator
-                response = orchestrator.process(prompt)
+                # Call orchestrator.ask() instead of .process()
+                response = orchestrator.ask(prompt)
                 st.markdown(response)
                 # Add assistant response to chat history
                 st.session_state.messages.append({"role": "assistant", "content": response})
