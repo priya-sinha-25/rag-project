@@ -27,7 +27,7 @@ class Embedder:
             raise ImportError("fastembed is not installed.")
         
         logger.info(f"Loading fastembed model: {self.model_name}")
-        self.model = TextEmbedding(model_name=self.model_name)
+        self.model = TextEmbedding(model_name=self.model_name, cache_dir="/tmp/fastembed")
         self.dim = 384
         logger.info(f"Model loaded. Dimension: {self.dim}")
 
