@@ -5,9 +5,9 @@ from typing import List
 import numpy as np
 
 try:
-    from sentence_transformers import SentenceTransformer
+    from fastembed import TextEmbedding
 except ImportError:
-    SentenceTransformer = None
+    TextEmbedding = None
 
 from mf_faq.ingestion.chunker.service import Chunk
 
@@ -23,14 +23,12 @@ class EmbeddingBatch:
 class Embedder:
     def __init__(self, model_name: str = "BAAI/bge-small-en-v1.5"):
         self.model_name = model_name
-        if SentenceTransformer is None:
-            raise ImportError("sentence-transformers is not installed.")
+        if TextEmbedding is None:
+            raise ImportError("fastembed is not installed.")
         
-        logger.info(f"Loading embedding model: {self.model_name}")
-        self.model = SentenceTransformer(self.model_name)
-        
-        # Determine embedding dimension
-        self.dim = self.model.get_sentence_embedding_dimension()
+        logger.info(f"Loading fastembed model: {self.model_name}")
+        self.model = TextEmbedding(model_name=self.model_name)
+        self.dim = 384
         logger.info(f"Model loaded. Dimension: {self.dim}")
 
     def embed(self, chunks: List[Chunk]) -> EmbeddingBatch:
@@ -39,20 +37,16 @@ class Embedder:
 
         texts_to_embed = []
         for chunk in chunks:
-            # Format: scheme_name \n\n text
             formatted_text = f"{chunk.scheme_name}\n\n{chunk.text}"
             texts_to_embed.append(formatted_text)
 
-        logger.info(f"Encoding {len(texts_to_embed)} chunks...")
-        embeddings = self.model.encode(
-            texts_to_embed, 
-            batch_size=32, 
-            show_progress_bar=False, 
-            convert_to_numpy=True,
-            normalize_embeddings=True # Recommended for bge models
-        )
+        logger.info(f"Encoding {len(texts_to_embed)} chunks with fastembed...")
+        embeddings_generator = self.model.embed(texts_to_embed)
+        embeddings = np.vstack(list(embeddings_generator))
         
-        # Ensure it's float32
+        norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+        norms = np.where(norms == 0, 1e-10, norms)
+        embeddings = embeddings / norms
         embeddings = embeddings.astype(np.float32)
         
         return EmbeddingBatch(
