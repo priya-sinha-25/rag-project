@@ -40,7 +40,7 @@ class HybridRetriever:
         # 2. Dense Search (FAISS)
         # If we know the scheme, prepending it to the query helps dense recall slightly, 
         # but often just searching the raw query is fine. We will search raw query.
-        q_emb = self.embedder.model.encode([query], convert_to_numpy=True, normalize_embeddings=True).astype(np.float32)
+        q_emb = self.embedder.embed_query(query)
         dense_scores, dense_indices = self.index.vector_index.search(q_emb, self.index.vector_index.ntotal)
         
         # Convert FAISS indices to chunk_ids

@@ -55,3 +55,13 @@ class Embedder:
             model_name=self.model_name,
             dim=self.dim
         )
+
+    def embed_query(self, query: str) -> np.ndarray:
+        """Embeds a single query string for dense retrieval."""
+        embeddings_generator = self.model.embed([query])
+        embeddings = np.vstack(list(embeddings_generator))
+        
+        norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
+        norms = np.where(norms == 0, 1e-10, norms)
+        embeddings = embeddings / norms
+        return embeddings.astype(np.float32)
